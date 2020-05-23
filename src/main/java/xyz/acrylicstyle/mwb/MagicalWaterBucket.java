@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -17,10 +18,12 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class MagicalWaterBucket extends JavaPlugin implements Listener {
     public static NamespacedKey MAGICAL_WATER_BUCKET = null;
+    public static NamespacedKey MAGICAL_BUCKET = null;
 
     @Override
     public void onEnable() {
@@ -31,10 +34,25 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
         recipe.shape("XXX", "XXX", "XXX");
         recipe.setIngredient('X', Material.WATER_BUCKET);
         Bukkit.addRecipe(recipe);
+
+        MAGICAL_BUCKET = new NamespacedKey(this, "magical_bucket");
+        ShapedRecipe recipe2 = new ShapedRecipe(MAGICAL_BUCKET, getMagicalBucket());
+        recipe2.shape("XXX", "XXX", "XXX");
+        recipe2.setIngredient('X', Material.BUCKET);
+        Bukkit.addRecipe(recipe);
     }
 
     public ItemStack getMagicalWaterBucket() {
         ItemStack result = new ItemStack(Material.WATER_BUCKET);
+        return addData(result);
+    }
+
+    public ItemStack getMagicalBucket() { // magical bucket that sucks water forever
+        ItemStack result = new ItemStack(Material.BUCKET);
+        return addData(result);
+    }
+
+    private ItemStack addData(ItemStack result) {
         ItemMeta meta = result.getItemMeta();
         meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -50,6 +68,16 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
     public static boolean isMagicalWaterBucket(@Nullable ItemStack item) {
         if (item == null) return false;
         if (item.getType() != Material.WATER_BUCKET) return false;
+        return hasInfiniteTag(item);
+    }
+
+    public static boolean isMagicalBucket(@Nullable ItemStack item) {
+        if (item == null) return false;
+        if (item.getType() != Material.BUCKET) return false;
+        return hasInfiniteTag(item);
+    }
+
+    private static boolean hasInfiniteTag(@NotNull ItemStack item) {
         net.minecraft.server.v1_15_R1.ItemStack handle = CraftItemStack.asNMSCopy(item);
         if (!handle.hasTag()) return false;
         NBTTagCompound tag = handle.getOrCreateTag();
@@ -59,6 +87,7 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         Bukkit.removeRecipe(MAGICAL_WATER_BUCKET);
+        Bukkit.removeRecipe(MAGICAL_BUCKET);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -78,6 +107,29 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
                         e.getPlayer().getInventory().setItemInMainHand(getMagicalWaterBucket());
                     } else {
                         e.getPlayer().getInventory().setItemInOffHand(getMagicalWaterBucket());
+                    }
+                }
+            }.runTask(this);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerBucketFill(PlayerBucketFillEvent e) {
+        if (e.isCancelled()) return;
+        boolean mainHand;
+        if (e.getHand() == EquipmentSlot.OFF_HAND) {
+            mainHand = false;
+        } else if (e.getHand() == EquipmentSlot.HAND) {
+            mainHand = true;
+        } else return;
+        if (isMagicalBucket(mainHand ? e.getPlayer().getInventory().getItemInMainHand() : e.getPlayer().getInventory().getItemInOffHand())) {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (mainHand) {
+                        e.getPlayer().getInventory().setItemInMainHand(getMagicalBucket());
+                    } else {
+                        e.getPlayer().getInventory().setItemInOffHand(getMagicalBucket());
                     }
                 }
             }.runTask(this);
