@@ -40,7 +40,7 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
         ShapedRecipe recipe2 = new ShapedRecipe(MAGICAL_BUCKET, getMagicalBucket(Type.EMPTY));
         recipe2.shape("XXX", "XXX", "XXX");
         recipe2.setIngredient('X', Material.BUCKET);
-        Bukkit.addRecipe(recipe);
+        Bukkit.addRecipe(recipe2);
     }
 
     public ItemStack getMagicalBucket(Type type) {
