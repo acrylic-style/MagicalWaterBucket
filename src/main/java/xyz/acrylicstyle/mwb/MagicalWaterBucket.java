@@ -2,6 +2,7 @@ package xyz.acrylicstyle.mwb;
 
 import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
@@ -30,30 +31,48 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
 
         MAGICAL_WATER_BUCKET = new NamespacedKey(this, "magical_water_bucket");
-        ShapedRecipe recipe = new ShapedRecipe(MAGICAL_WATER_BUCKET, getMagicalWaterBucket());
+        ShapedRecipe recipe = new ShapedRecipe(MAGICAL_WATER_BUCKET, getMagicalBucket(Type.WATER));
         recipe.shape("XXX", "XXX", "XXX");
         recipe.setIngredient('X', Material.WATER_BUCKET);
         Bukkit.addRecipe(recipe);
 
         MAGICAL_BUCKET = new NamespacedKey(this, "magical_bucket");
-        ShapedRecipe recipe2 = new ShapedRecipe(MAGICAL_BUCKET, getMagicalBucket());
+        ShapedRecipe recipe2 = new ShapedRecipe(MAGICAL_BUCKET, getMagicalBucket(Type.EMPTY));
         recipe2.shape("XXX", "XXX", "XXX");
         recipe2.setIngredient('X', Material.BUCKET);
         Bukkit.addRecipe(recipe);
     }
 
-    public ItemStack getMagicalWaterBucket() {
-        ItemStack result = new ItemStack(Material.WATER_BUCKET);
-        return addData(result);
+    public ItemStack getMagicalBucket(Type type) {
+        Material material;
+        if (type == Type.LAVA) {
+            material = Material.LAVA_BUCKET;
+        } else if (type == Type.WATER) {
+            material = Material.WATER_BUCKET;
+        } else {
+            material = Material.BUCKET;
+        }
+        ItemStack result = new ItemStack(material);
+        return addData(result, type);
     }
 
-    public ItemStack getMagicalBucket() { // magical bucket that sucks water forever
-        ItemStack result = new ItemStack(Material.BUCKET);
-        return addData(result);
+    public enum Type {
+        LAVA,
+        WATER,
+        EMPTY,
     }
 
-    private ItemStack addData(ItemStack result) {
+    private ItemStack addData(ItemStack result, Type type) {
+        String s;
+        if (type == Type.LAVA) {
+            s = ChatColor.RED + "Magical Lava Bucket";
+        } else if (type == Type.WATER) {
+            s = ChatColor.AQUA + "Magical Water Bucket";
+        } else {
+            s = ChatColor.GREEN + "Magical Empty Bucket";
+        }
         ItemMeta meta = result.getItemMeta();
+        meta.setDisplayName(s);
         meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         result.setItemMeta(meta);
@@ -104,9 +123,9 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
                 @Override
                 public void run() {
                     if (mainHand) {
-                        e.getPlayer().getInventory().setItemInMainHand(getMagicalWaterBucket());
+                        e.getPlayer().getInventory().setItemInMainHand(getMagicalBucket(Type.WATER));
                     } else {
-                        e.getPlayer().getInventory().setItemInOffHand(getMagicalWaterBucket());
+                        e.getPlayer().getInventory().setItemInOffHand(getMagicalBucket(Type.WATER));
                     }
                 }
             }.runTask(this);
@@ -127,9 +146,9 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
                 @Override
                 public void run() {
                     if (mainHand) {
-                        e.getPlayer().getInventory().setItemInMainHand(getMagicalBucket());
+                        e.getPlayer().getInventory().setItemInMainHand(getMagicalBucket(Type.EMPTY));
                     } else {
-                        e.getPlayer().getInventory().setItemInOffHand(getMagicalBucket());
+                        e.getPlayer().getInventory().setItemInOffHand(getMagicalBucket(Type.EMPTY));
                     }
                 }
             }.runTask(this);
