@@ -1,11 +1,9 @@
 package xyz.acrylicstyle.mwb;
 
-import net.minecraft.server.v1_15_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.v1_15_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,6 +19,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.acrylicstyle.paper.Paper;
+import xyz.acrylicstyle.paper.inventory.ItemStackUtils;
+import xyz.acrylicstyle.paper.nbt.NBTTagCompound;
 
 public class MagicalWaterBucket extends JavaPlugin implements Listener {
     public static NamespacedKey MAGICAL_WATER_BUCKET = null;
@@ -76,11 +77,11 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
         meta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 1, true);
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         result.setItemMeta(meta);
-        net.minecraft.server.v1_15_R1.ItemStack handle = CraftItemStack.asNMSCopy(result);
-        NBTTagCompound tag = handle.getOrCreateTag();
+        ItemStackUtils util = Paper.itemStack(result);
+        NBTTagCompound tag = util.getOrCreateTag();
         tag.setBoolean("infinite", true);
-        handle.setTag(tag);
-        result = CraftItemStack.asBukkitCopy(handle);
+        util.setTag(tag);
+        result = util.getItemStack();
         return result;
     }
 
@@ -97,9 +98,9 @@ public class MagicalWaterBucket extends JavaPlugin implements Listener {
     }
 
     private static boolean hasInfiniteTag(@NotNull ItemStack item) {
-        net.minecraft.server.v1_15_R1.ItemStack handle = CraftItemStack.asNMSCopy(item);
-        if (!handle.hasTag()) return false;
-        NBTTagCompound tag = handle.getOrCreateTag();
+        ItemStackUtils util = Paper.itemStack(item);
+        if (!util.hasTag()) return false;
+        NBTTagCompound tag = util.getOrCreateTag();
         return tag.hasKey("infinite") && tag.getBoolean("infinite");
     }
 
